@@ -12,7 +12,7 @@ disqus: 1
 ### Android SDK Requirements
 **Minimum SDK Version** - Glide requires a minimum SDK version of **14** (Ice Cream Sandwich) or higher.
 
-**Compile SDK Version** - Glide must be compiled against SDK version **26** (Oreo) or higher.
+**Compile SDK Version** - Glide must be compiled against SDK version **27** (Oreo MR1) or higher.
 
 **Support Library Version** - Glide uses support library version **27**.
 
@@ -203,11 +203,19 @@ If you use proguard, you may need to add the following lines to your ``proguard.
 ```
 -keep public class * implements com.bumptech.glide.module.GlideModule
 -keep public class * extends com.bumptech.glide.module.AppGlideModule
--keep public enum com.bumptech.glide.load.resource.bitmap.ImageHeaderParser$** {
+-keep public enum com.bumptech.glide.load.ImageHeaderParser$** {
   **[] $VALUES;
   public *;
 }
 
+If you're targeting any API level less than Android API 27, also include:
+```pro
+-dontwarn com.bumptech.glide.load.resource.bitmap.VideoDecoder
+```
+VideoDecoder uses API 27 APIs which may cause proguard warnings even though the newer APIs won't be called on devices with older versions of Android.
+
+If you use DexGuard you may also want to include:
+```pro
 # for DexGuard only
 -keepresourcexmlelements manifest/application/meta-data@value=GlideModule
 ```

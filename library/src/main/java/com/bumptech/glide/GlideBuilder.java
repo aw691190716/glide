@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.ArrayMap;
 import android.util.Log;
-import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.engine.Engine;
 import com.bumptech.glide.load.engine.bitmap_recycle.ArrayPool;
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool;
@@ -30,8 +29,6 @@ import java.util.Map;
 /**
  * A builder class for setting default structural classes for Glide to use.
  */
-// Public API.
-@SuppressWarnings({"unused", "WeakerAccess"})
 public final class GlideBuilder {
   private final Map<Class<?>, TransitionOptions<?, ?>> defaultTransitionOptions = new ArrayMap<>();
   private Engine engine;
@@ -83,30 +80,12 @@ public final class GlideBuilder {
    * @param memoryCache The cache to use.
    * @return This builder.
    */
+  // Public API.
+  @SuppressWarnings("WeakerAccess")
   @NonNull
   public GlideBuilder setMemoryCache(@Nullable MemoryCache memoryCache) {
     this.memoryCache = memoryCache;
     return this;
-  }
-
-  /**
-   * Sets the {@link com.bumptech.glide.load.engine.cache.DiskCache} implementation to use to store
-   * {@link com.bumptech.glide.load.engine.Resource} data and thumbnails.
-   *
-   * @param diskCache The disk cache to use.
-   * @return This builder.
-   * @deprecated Creating a disk cache directory on the main thread causes strict mode violations,
-   * use {@link #setDiskCache(com.bumptech.glide.load.engine.cache.DiskCache.Factory)} instead.
-   * Scheduled to be removed in Glide 4.0.
-   */
-  @Deprecated
-  public GlideBuilder setDiskCache(final DiskCache diskCache) {
-    return setDiskCache(new DiskCache.Factory() {
-      @Override
-      public DiskCache build() {
-        return diskCache;
-      }
-    });
   }
 
   /**
@@ -117,6 +96,8 @@ public final class GlideBuilder {
    * @param diskCacheFactory The disk cache factory to use.
    * @return This builder.
    */
+  // Public API.
+  @SuppressWarnings("WeakerAccess")
   @NonNull
   public GlideBuilder setDiskCache(@Nullable DiskCache.Factory diskCacheFactory) {
     this.diskCacheFactory = diskCacheFactory;
@@ -160,6 +141,8 @@ public final class GlideBuilder {
    * @see #setDiskCacheExecutor(GlideExecutor)
    * @see GlideExecutor
    */
+  // Public API.
+  @SuppressWarnings("WeakerAccess")
   @NonNull
   public GlideBuilder setSourceExecutor(@Nullable GlideExecutor service) {
     this.sourceExecutor = service;
@@ -181,6 +164,8 @@ public final class GlideBuilder {
    * @see #setSourceExecutor(GlideExecutor)
    * @see GlideExecutor
    */
+  // Public API.
+  @SuppressWarnings("WeakerAccess")
   @NonNull
   public GlideBuilder setDiskCacheExecutor(@Nullable GlideExecutor service) {
     this.diskCacheExecutor = service;
@@ -199,6 +184,8 @@ public final class GlideBuilder {
    * @param service The {@link GlideExecutor} to use.
    * @return This builder.
    */
+  // Public API.
+  @SuppressWarnings("WeakerAccess")
   @NonNull
   public GlideBuilder setAnimationExecutor(@Nullable GlideExecutor service) {
     this.animationExecutor = service;
@@ -237,29 +224,12 @@ public final class GlideBuilder {
    * {@link android.graphics.drawable.BitmapDrawable}s, the transition you registered for
    * {@link android.graphics.drawable.BitmapDrawable}s will be used.
    */
+  // Public API.
+  @SuppressWarnings("unused")
   @NonNull
   public <T> GlideBuilder setDefaultTransitionOptions(
       @NonNull Class<T> clazz, @Nullable TransitionOptions<?, T> options) {
     defaultTransitionOptions.put(clazz, options);
-    return this;
-  }
-
-  /**
-   * Sets the {@link com.bumptech.glide.load.DecodeFormat} that will be the default format for all
-   * the default decoders that can change the {@link android.graphics.Bitmap.Config} of the {@link
-   * android.graphics.Bitmap}s they decode.
-   *
-   * <p> Decode format is always a suggestion, not a requirement. See {@link
-   * com.bumptech.glide.load.DecodeFormat} for more details. </p>
-   *
-   * @param decodeFormat The format to use.
-   * @return This builder.
-   *
-   * @deprecated Use {@link #setDefaultRequestOptions(RequestOptions)} instead.
-   */
-  @Deprecated
-  public GlideBuilder setDecodeFormat(DecodeFormat decodeFormat) {
-    defaultRequestOptions = defaultRequestOptions.apply(new RequestOptions().format(decodeFormat));
     return this;
   }
 
@@ -272,6 +242,8 @@ public final class GlideBuilder {
    * @param builder The builder to use (will not be modified).
    * @return This builder.
    */
+  // Public API.
+  @SuppressWarnings("unused")
   @NonNull
   public GlideBuilder setMemorySizeCalculator(@NonNull MemorySizeCalculator.Builder builder) {
     return setMemorySizeCalculator(builder.build());
@@ -287,6 +259,8 @@ public final class GlideBuilder {
    * @param calculator The calculator to use.
    * @return This builder.
    */
+  // Public API.
+  @SuppressWarnings("WeakerAccess")
   @NonNull
   public GlideBuilder setMemorySizeCalculator(@Nullable MemorySizeCalculator calculator) {
     this.memorySizeCalculator = calculator;
@@ -301,6 +275,8 @@ public final class GlideBuilder {
    * @param factory The factory to use
    * @return This builder.
    */
+  // Public API.
+  @SuppressWarnings("unused")
   @NonNull
   public GlideBuilder setConnectivityMonitorFactory(@Nullable ConnectivityMonitorFactory factory) {
     this.connectivityMonitorFactory = factory;
@@ -332,6 +308,8 @@ public final class GlideBuilder {
    * @param logLevel The log level to use from {@link Log}.
    * @return This builder.
    */
+  // Public API.
+  @SuppressWarnings("unused")
   @NonNull
   public GlideBuilder setLogLevel(int logLevel) {
     if (logLevel < Log.VERBOSE || logLevel > Log.ERROR) {
@@ -385,6 +363,8 @@ public final class GlideBuilder {
    *
    * @return This builder.
    */
+  // Public API.
+  @SuppressWarnings("unused")
   @NonNull
   public GlideBuilder setIsActiveResourceRetentionAllowed(
       boolean isActiveResourceRetentionAllowed) {
@@ -403,7 +383,7 @@ public final class GlideBuilder {
   }
 
   @NonNull
-  public Glide build(@NonNull Context context) {
+  Glide build(@NonNull Context context) {
     if (sourceExecutor == null) {
       sourceExecutor = GlideExecutor.newSourceExecutor();
     }

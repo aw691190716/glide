@@ -53,6 +53,7 @@ public class RequestManagerRetriever implements Handler.Callback {
   /**
    * Pending adds for RequestManagerFragments.
    */
+  @SuppressWarnings("deprecation")
   @VisibleForTesting
   final Map<android.app.FragmentManager, RequestManagerFragment> pendingRequestManagerFragments =
       new HashMap<>();
@@ -130,7 +131,8 @@ public class RequestManagerRetriever implements Handler.Callback {
     } else {
       assertNotDestroyed(activity);
       FragmentManager fm = activity.getSupportFragmentManager();
-      return supportFragmentGet(activity, fm, null /*parentHint*/);
+      return supportFragmentGet(
+          activity, fm, /*parentHint=*/ null, isActivityVisible(activity));
     }
   }
 
@@ -142,10 +144,11 @@ public class RequestManagerRetriever implements Handler.Callback {
       return get(fragment.getActivity().getApplicationContext());
     } else {
       FragmentManager fm = fragment.getChildFragmentManager();
-      return supportFragmentGet(fragment.getActivity(), fm, fragment);
+      return supportFragmentGet(fragment.getActivity(), fm, fragment, fragment.isVisible());
     }
   }
 
+  @SuppressWarnings("deprecation")
   @NonNull
   public RequestManager get(@NonNull Activity activity) {
     if (Util.isOnBackgroundThread()) {
@@ -153,10 +156,12 @@ public class RequestManagerRetriever implements Handler.Callback {
     } else {
       assertNotDestroyed(activity);
       android.app.FragmentManager fm = activity.getFragmentManager();
-      return fragmentGet(activity, fm, null /*parentHint*/);
+      return fragmentGet(
+          activity, fm, /*parentHint=*/ null, isActivityVisible(activity));
     }
   }
 
+  @SuppressWarnings("deprecation")
   @NonNull
   public RequestManager get(@NonNull View view) {
     if (Util.isOnBackgroundThread()) {
@@ -229,6 +234,8 @@ public class RequestManagerRetriever implements Handler.Callback {
     return result;
   }
 
+  @SuppressWarnings({"deprecation", "DeprecatedIsStillUsed"})
+  @Deprecated
   @Nullable
   private android.app.Fragment findFragment(@NonNull View target, @NonNull Activity activity) {
     tempViewToFragment.clear();
@@ -255,6 +262,8 @@ public class RequestManagerRetriever implements Handler.Callback {
 
   // TODO: Consider using an accessor class in the support library package to more directly retrieve
   // non-support Fragments.
+  @SuppressWarnings("deprecation")
+  @Deprecated
   @TargetApi(Build.VERSION_CODES.O)
   private void findAllFragmentsWithViews(
       @NonNull android.app.FragmentManager fragmentManager,
@@ -271,6 +280,8 @@ public class RequestManagerRetriever implements Handler.Callback {
     }
   }
 
+  @SuppressWarnings("deprecation")
+  @Deprecated
   private void findAllFragmentsWithViewsPreO(
       @NonNull android.app.FragmentManager fragmentManager,
       @NonNull ArrayMap<View, android.app.Fragment> result) {
@@ -313,6 +324,8 @@ public class RequestManagerRetriever implements Handler.Callback {
     }
   }
 
+  @SuppressWarnings("deprecation")
+  @Deprecated
   @NonNull
   @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
   public RequestManager get(@NonNull android.app.Fragment fragment) {
@@ -324,19 +337,33 @@ public class RequestManagerRetriever implements Handler.Callback {
       return get(fragment.getActivity().getApplicationContext());
     } else {
       android.app.FragmentManager fm = fragment.getChildFragmentManager();
-      return fragmentGet(fragment.getActivity(), fm, fragment);
+      return fragmentGet(fragment.getActivity(), fm, fragment, fragment.isVisible());
     }
   }
 
+  @SuppressWarnings("deprecation")
+  @Deprecated
   @NonNull
-  RequestManagerFragment getRequestManagerFragment(
-      @NonNull final android.app.FragmentManager fm, @Nullable android.app.Fragment parentHint) {
+  RequestManagerFragment getRequestManagerFragment(Activity activity) {
+    return getRequestManagerFragment(
+        activity.getFragmentManager(), /*parentHint=*/ null, isActivityVisible(activity));
+  }
+
+  @SuppressWarnings("deprecation")
+  @NonNull
+  private RequestManagerFragment getRequestManagerFragment(
+      @NonNull final android.app.FragmentManager fm,
+      @Nullable android.app.Fragment parentHint,
+      boolean isParentVisible) {
     RequestManagerFragment current = (RequestManagerFragment) fm.findFragmentByTag(FRAGMENT_TAG);
     if (current == null) {
       current = pendingRequestManagerFragments.get(fm);
       if (current == null) {
         current = new RequestManagerFragment();
         current.setParentFragmentHint(parentHint);
+        if (isParentVisible) {
+          current.getGlideLifecycle().onStart();
+        }
         pendingRequestManagerFragments.put(fm, current);
         fm.beginTransaction().add(current, FRAGMENT_TAG).commitAllowingStateLoss();
         handler.obtainMessage(ID_REMOVE_FRAGMENT_MANAGER, fm).sendToTarget();
@@ -345,11 +372,14 @@ public class RequestManagerRetriever implements Handler.Callback {
     return current;
   }
 
+  @SuppressWarnings({"deprecation", "DeprecatedIsStillUsed"})
+  @Deprecated
   @NonNull
   private RequestManager fragmentGet(@NonNull Context context,
       @NonNull android.app.FragmentManager fm,
-      @Nullable android.app.Fragment parentHint) {
-    RequestManagerFragment current = getRequestManagerFragment(fm, parentHint);
+      @Nullable android.app.Fragment parentHint,
+      boolean isParentVisible) {
+    RequestManagerFragment current = getRequestManagerFragment(fm, parentHint, isParentVisible);
     RequestManager requestManager = current.getRequestManager();
     if (requestManager == null) {
       // TODO(b/27524013): Factor out this Glide.get() call.
@@ -363,8 +393,20 @@ public class RequestManagerRetriever implements Handler.Callback {
   }
 
   @NonNull
-  SupportRequestManagerFragment getSupportRequestManagerFragment(
-      @NonNull final FragmentManager fm, @Nullable Fragment parentHint) {
+  SupportRequestManagerFragment getSupportRequestManagerFragment(FragmentActivity activity) {
+    return getSupportRequestManagerFragment(
+        activity.getSupportFragmentManager(), /*parentHint=*/ null, isActivityVisible(activity));
+  }
+
+  private static boolean isActivityVisible(Activity activity) {
+    // This is a poor heuristic, but it's about all we have. We'd rather err on the side of visible
+    // and start requests than on the side of invisible and ignore valid requests.
+    return !activity.isFinishing();
+  }
+
+  @NonNull
+  private SupportRequestManagerFragment getSupportRequestManagerFragment(
+      @NonNull final FragmentManager fm, @Nullable Fragment parentHint, boolean isParentVisible) {
     SupportRequestManagerFragment current =
         (SupportRequestManagerFragment) fm.findFragmentByTag(FRAGMENT_TAG);
     if (current == null) {
@@ -372,6 +414,9 @@ public class RequestManagerRetriever implements Handler.Callback {
       if (current == null) {
         current = new SupportRequestManagerFragment();
         current.setParentFragmentHint(parentHint);
+        if (isParentVisible) {
+          current.getGlideLifecycle().onStart();
+        }
         pendingSupportRequestManagerFragments.put(fm, current);
         fm.beginTransaction().add(current, FRAGMENT_TAG).commitAllowingStateLoss();
         handler.obtainMessage(ID_REMOVE_SUPPORT_FRAGMENT_MANAGER, fm).sendToTarget();
@@ -381,9 +426,13 @@ public class RequestManagerRetriever implements Handler.Callback {
   }
 
   @NonNull
-  private RequestManager supportFragmentGet(@NonNull Context context, @NonNull FragmentManager fm,
-      @Nullable Fragment parentHint) {
-    SupportRequestManagerFragment current = getSupportRequestManagerFragment(fm, parentHint);
+  private RequestManager supportFragmentGet(
+      @NonNull Context context,
+      @NonNull FragmentManager fm,
+      @Nullable Fragment parentHint,
+      boolean isParentVisible) {
+    SupportRequestManagerFragment current =
+        getSupportRequestManagerFragment(fm, parentHint, isParentVisible);
     RequestManager requestManager = current.getRequestManager();
     if (requestManager == null) {
       // TODO(b/27524013): Factor out this Glide.get() call.

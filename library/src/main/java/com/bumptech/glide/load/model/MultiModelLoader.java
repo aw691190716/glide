@@ -52,7 +52,7 @@ class MultiModelLoader<Model, Data> implements ModelLoader<Model, Data> {
         }
       }
     }
-    return !fetchers.isEmpty()
+    return !fetchers.isEmpty() && sourceKey != null
         ? new LoadData<>(sourceKey, new MultiFetcher<>(fetchers, exceptionListPool)) : null;
   }
 
@@ -81,7 +81,8 @@ class MultiModelLoader<Model, Data> implements ModelLoader<Model, Data> {
     @Nullable
     private List<Throwable> exceptions;
 
-    MultiFetcher(@NonNull List<DataFetcher<Data>> fetchers,
+    MultiFetcher(
+        @NonNull List<DataFetcher<Data>> fetchers,
         @NonNull Pool<List<Throwable>> throwableListPool) {
       this.throwableListPool = throwableListPool;
       Preconditions.checkNotEmpty(fetchers);
@@ -90,7 +91,8 @@ class MultiModelLoader<Model, Data> implements ModelLoader<Model, Data> {
     }
 
     @Override
-    public void loadData(@NonNull Priority priority, @NonNull DataCallback<? super Data> callback) {
+    public void loadData(
+        @NonNull Priority priority, @NonNull DataCallback<? super Data> callback) {
       this.priority = priority;
       this.callback = callback;
       exceptions = throwableListPool.acquire();
